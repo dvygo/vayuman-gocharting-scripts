@@ -1,0 +1,57 @@
+// ────────────────────────────────────────────────────────────────
+//  COTH&COTL v1.13.0_(Vayuman)
+//  © 2025 Vayuman Capital. All Rights Reserved.
+//
+//  Licensed under the Mozilla Public License, v. 2.0.
+//  You may obtain a copy of the License at:
+//  https://mozilla.org/MPL/2.0/
+//
+//  Description:
+//  Detects when COTH (Cumulative Orderflow Top High) or
+//  COTL (Cumulative Orderflow Top Low) values exceed a
+//  specified multiple of their previous values.
+//  Generates alerts and optional visual markers.
+//
+//  Reference:
+//  GoCharting LipiScript Documentation — https://gocharting.com/docs/scripting/
+// ────────────────────────────────────────────────────────────────
+
+indicator("COTH&COTL v1.13.0_(Vayuman)", overlay=false)
+
+// Inputs
+mult      = input(2.0, "Multiplier")
+minPrev   = input(1.0, "Min Previous")
+showMarks = input(true, "Show Markers")
+
+// Sources (adjust identifiers if your build differs)
+coth = orderflow.cothigh
+cotl = orderflow.cotlow
+
+// Previous values
+prevCoth = nz(coth[1])
+prevCotl = nz(cotl[1])
+
+// Conditions
+hitCoth = (prevCoth >= minPrev) and (coth >= mult * prevCoth)
+hitCotl = (prevCotl >= minPrev) and (cotl >= mult * prevCotl)
+
+// Alerts
+if hitCoth {
+  alert("COTH ≥ " + str.tostring(mult) + "× previous | prev=" + str.tostring(prevCoth) + " now=" + str.tostring(coth))
+}
+if hitCotl {
+  alert("COTL ≥ " + str.tostring(mult) + "× previous | prev=" + str.tostring(prevCotl) + " now=" + str.tostring(cotl))
+}
+
+// Plots
+plot(coth, title="COTH", color=#00A000ff)
+plot(cotl, title="COTL", color=#C00000ff)
+
+// Markers (use plotshape; no label API in this build)
+plotchar(showMarks and hitCoth ? coth : na, title="", char="▲", location=location.abovebar, color=#00A000ff)
+plotchar(showMarks and hitCotl ? cotl : na, title="", char="▼", location=location.belowbar, color=#C00000ff)
+// ────────────────────────────────────────────────────────────────
+//  End of File
+//  Licensed under the Mozilla Public License, v. 2.0
+//  https://mozilla.org/MPL/2.0/
+// ────────────────────────────────────────────────────────────────

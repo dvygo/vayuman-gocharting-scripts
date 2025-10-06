@@ -1,0 +1,53 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// © 2025 Vayuman Capital — Licensed under MPL-2.0.
+//
+// Name: CVD Candles (v2.1 Anti-Day Reset)
+// Desc: Cumulative Delta candles with true wicks (intrabar delta extremes).
+//       If “Reset Daily?” is ON, only the first bar of each day opens at 0;
+//       all subsequent bars open at prior CVD. Plots in a separate pane.
+
+indicator("CVD Candles v2.1.0 (Vayuman)", overlay=false)
+
+// Colors
+upColor   = input(#009944FF, "Up Color")
+downColor = input(#CC0000FF, "Down Color")
+
+// Reset behavior (ON: open = 0 only on the first bar of each day)
+resetDaily = input(false, "Reset Daily?")
+
+// Per-bar orderflow delta
+d = orderflow.buyvolume - orderflow.sellvolume
+
+// Intra-bar delta extremes (for true wicks)
+dh = orderflow.maxdelta
+dl = orderflow.mindelta
+
+// Detect first bar of a new day
+isNewDay = talib.change(dayofmonth)
+
+// Seed and read previous CVD safely (define first, then use history)
+cvd = 0.0
+temp_prevCVD = nz(cvd[1])
+
+// Base for this bar (0 only on the day's first bar if reset is ON; else prior CVD)
+base = (resetDaily and isNewDay) ? 0.0 : temp_prevCVD
+
+// Current cumulative delta
+cvd := base + d
+
+// CVD OHLC with true wicks
+o = base
+c = cvd
+h = base + dh
+l = base + dl
+
+// Candle color
+barColor = c >= o ? upColor : downColor
+
+// Render in a separate pane
+plotcandle(o, h, l, c, color=barColor, wickcolor=barColor, bordercolor=barColor, title="V CVD")
+
+// End of file — MPL 2.0 (https://mozilla.org/MPL/2.0/)
